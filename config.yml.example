@@ -1,0 +1,14 @@
+smtp:
+  host: smtp.example.com
+  port: 465
+  username: your_username@example.com
+  password: your_password
+
+email:
+  subject: Your Newsletter Subject
+  from: sender@example.com
+
+rate_limit:
+  emails_per_batch: 50
+  batch_delay: 300
+  delay_between_emails: 1 
