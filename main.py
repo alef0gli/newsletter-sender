@@ -53,13 +53,23 @@ class NewsletterSender:
     def _rate_limit(self):
         """Implement rate limiting to avoid spam filters"""
         if self.sent_count >= self.config['rate_limit']['emails_per_batch']:
-            time.sleep(self.config['rate_limit']['batch_delay'])
+            batch_delay = self.config['rate_limit']['batch_delay']
+            print(f"\nBatch limit reached. Waiting {batch_delay} seconds...")
+            
+            for remaining in range(batch_delay, 0, -1):
+                print(f"\rResuming in {remaining} seconds...  ", end='', flush=True)
+                time.sleep(1)
+            print("\rResuming now!                           ")
+            
             self.sent_count = 0
         else:
             current_time = time.time()
             time_since_last = current_time - self.last_send_time
             if time_since_last < self.config['rate_limit']['delay_between_emails']:
-                time.sleep(self.config['rate_limit']['delay_between_emails'] - time_since_last)
+                wait_time = self.config['rate_limit']['delay_between_emails'] - time_since_last
+                print(f"\rWaiting {wait_time:.1f} seconds...", end='', flush=True)
+                time.sleep(wait_time)
+                print("\r                           ", end='', flush=True)
     
     def _test_smtp_connection(self):
         """Test SMTP connection before sending batch emails"""
@@ -149,8 +159,8 @@ class NewsletterSender:
                                     print(f"Connection lost, retrying in 5 seconds...")
                                     time.sleep(5)
                                     print("Reconnecting to SMTP server...")
-                                    server.connect(self.config['smtp']['host'], self.config['smtp']['port'])
-                                    server.starttls()
+                                    # Create new SSL connection on reconnect
+                                    server = smtplib.SMTP_SSL(self.config['smtp']['host'], self.config['smtp']['port'])
                                     server.login(self.config['smtp']['username'], self.config['smtp']['password'])
                                 else:
                                     raise
